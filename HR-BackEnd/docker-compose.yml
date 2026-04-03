@@ -1,0 +1,79 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: hr-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: hr_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: hr-pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+
+  redis:
+    image: redis:7-alpine
+    container_name: hr-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  app:
+    build: .
+    container_name: hr-backend
+    restart: always
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      
+      CLOUDTIME_DSN: ${CLOUDTIME_DSN}
+
+      SQLSERVER_USER: ${SQLSERVER_USER}
+      SQLSERVER_PASSWORD: ${SQLSERVER_PASSWORD}
+      SQLSERVER_HOST: ${SQLSERVER_HOST}
+      SQLSERVER_PORT: ${SQLSERVER_PORT}
+      SQLSERVER_DB: ${SQLSERVER_DB}
+
+      SQLEXPRESS_USER: ${SQLEXPRESS_USER}
+      SQLEXPRESS_PASSWORD: ${SQLEXPRESS_PASSWORD}
+      SQLEXPRESS_HOST: ${SQLEXPRESS_HOST}
+      SQLEXPRESS_PORT: ${SQLEXPRESS_PORT}
+      SQLEXPRESS_DB: ${SQLEXPRESS_DB}
+      SQLEXPRESS_INSTANCE: ${SQLEXPRESS_INSTANCE}
+
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_TTL_MINUTES: ${JWT_ACCESS_TTL_MINUTES}
+
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DB: ${REDIS_DB}
+
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres_data:
+  redis_data:

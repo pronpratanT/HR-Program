@@ -1,0 +1,181 @@
+package db
+
+import (
+	"context"
+	"fmt"
+	"hr-program/shared/config"
+	"log"
+	"os"
+	"strconv"
+	"time"
+
+	"github.com/redis/go-redis/v9"
+	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlserver"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+)
+
+var (
+	CloudtimeDB  *gorm.DB
+	AppDB        *gorm.DB
+	EconsDB      *gorm.DB
+	SqlExpressDB *gorm.DB
+	RedisClient  *redis.Client
+)
+
+func ConnectDB() *gorm.DB {
+	if AppDB != nil {
+		return AppDB
+	}
+
+	config.LoadConfig()
+
+	host := os.Getenv("DB_HOST")
+	port := os.Getenv("DB_PORT")
+	password := os.Getenv("DB_PASSWORD")
+	user := os.Getenv("DB_USER")
+	dbname := os.Getenv("DB_NAME")
+
+	log.Printf("DB env: host=%s port=%s user=%s password=%s db=%s",
+		host, port, user, password, dbname)
+
+	dsn := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
+		host,
+		user,
+		password,
+		dbname,
+		port,
+	)
+
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatal("Failed to connect postgres: ", err)
+	}
+
+	sqlDB, _ := db.DB()
+	sqlDB.SetMaxOpenConns(10)
+	sqlDB.SetMaxIdleConns(5)
+	sqlDB.SetConnMaxLifetime(time.Hour)
+
+	AppDB = db
+	return AppDB
+}
+
+func ConnectCloudtime() *gorm.DB {
+	if CloudtimeDB != nil {
+		return CloudtimeDB
+	}
+
+	config.LoadConfig()
+
+	db, err := gorm.Open(mysql.Open(config.AppConfig.CloudtimeDSN), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
+	if err != nil {
+		panic("Error connecting Cloudtime: " + err.Error())
+	}
+
+	sqlDB, err := db.DB()
+	if err != nil {
+		panic("Error getting sqlDB: " + err.Error())
+	}
+
+	sqlDB.SetMaxIdleConns(10)
+	sqlDB.SetMaxOpenConns(50)
+	sqlDB.SetConnMaxIdleTime(10 * time.Minute)
+
+	CloudtimeDB = db
+	log.Println("Cloudtime Connected Successfully")
+	return CloudtimeDB
+}
+
+func ConnectEcons() *gorm.DB {
+	if EconsDB != nil {
+		return EconsDB
+	}
+
+	config.LoadConfig()
+
+	db, err := gorm.Open(sqlserver.Open(config.AppConfig.ECONS_SQLSERVER_DSN), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
+	if err != nil {
+		panic("Error connecting ECONS SQL Server: " + err.Error())
+	}
+
+	sqlDB, err := db.DB()
+	if err != nil {
+		panic("Error getting sqlDB for ECONS: " + err.Error())
+	}
+
+	sqlDB.SetMaxIdleConns(10)
+	sqlDB.SetMaxOpenConns(50)
+	sqlDB.SetConnMaxIdleTime(10 * time.Minute)
+
+	EconsDB = db
+	log.Println("ECONS SQL Server Connected Successfully")
+	return EconsDB
+}
+
+func ConnectSQLExpress() *gorm.DB {
+	if SqlExpressDB != nil {
+		return SqlExpressDB
+	}
+
+	config.LoadConfig()
+
+	db, err := gorm.Open(sqlserver.Open(config.AppConfig.SQLExpressDSN), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
+	if err != nil {
+		panic("Error connecting SQL Express: " + err.Error())
+	}
+
+	sqlDB, err := db.DB()
+	if err != nil {
+		panic("Error getting sqlDB for SQL Express: " + err.Error())
+	}
+
+	sqlDB.SetMaxIdleConns(10)
+	sqlDB.SetMaxOpenConns(50)
+	sqlDB.SetConnMaxIdleTime(10 * time.Minute)
+
+	SqlExpressDB = db
+	log.Println("SQL Express Connected Successfully")
+	return SqlExpressDB
+}
+
+func ConnectRedis() *redis.Client {
+	if RedisClient != nil {
+		return RedisClient
+	}
+
+	config.LoadConfig()
+
+	Redis, err := strconv.Atoi(config.AppConfig.RedisDB)
+	if err != nil {
+		log.Fatalf("Error connecting RedisDB: %v", err)
+	}
+
+	addr := fmt.Sprintf(
+		"%s:%s",
+		config.AppConfig.RedisHost,
+		config.AppConfig.RedisPort,
+	)
+
+	RedisClient = redis.NewClient(&redis.Options{
+		Addr:     addr,
+		Password: config.AppConfig.RedisPassword,
+		DB:       Redis,
+	})
+
+	if err := RedisClient.Ping(context.Background()).Err(); err != nil {
+		log.Fatalf("Error connecting to Redis: %v", err)
+	}
+
+	log.Println("Connected to Redis successfully", addr)
+	return RedisClient
+}

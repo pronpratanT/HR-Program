@@ -1,0 +1,358 @@
+package service
+
+import (
+	"log"
+	"sync"
+	"time"
+
+	"hr-program/internal/request-service/dto"
+	model "hr-program/shared/models/request"
+)
+
+// ดึงและ sync OT logs จาก ECONS -> app DB
+func (s *RequestService) SyncFullLoadOT() error {
+	minID, maxID, err := s.EconsRepo.GetMinMaxOTDocumentID()
+	if err != nil {
+		return err
+	}
+
+	mid := minID + (maxID-minID)/2
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+		// worker 1: [minID .. mid]
+		s.syncRangeOT(minID, mid)
+	}()
+
+	go func() {
+		defer wg.Done()
+		// worker 2: [mid+1 .. maxID] ป้องกันซ้ำกับ mid ของ worker แรก
+		if mid+1 <= maxID {
+			s.syncRangeOT(mid+1, maxID)
+		}
+	}()
+
+	wg.Wait()
+
+	return nil
+}
+
+func (s *RequestService) syncRangeOT(startID, endID int64) {
+	batchSize := 3000
+	// เริ่มจาก startID-1 เพื่อให้เงื่อนไข id > lastID ครอบคลุม record แรกสุด (id == startID)
+	lastID := startID - 1
+
+	for {
+		records, err := s.EconsRepo.GetBatchOTByDocumentIDRange(lastID, endID, batchSize)
+		if err != nil {
+			log.Println("Fetch OT records error:", err)
+			return
+		}
+
+		if len(records) == 0 {
+			break
+		}
+
+		var insertData []model.OTlogs
+
+		for _, r := range records {
+			// Normalize date/time strings from ECONS to match Postgres column types
+			dateStr := r.Date
+			if t, err := time.Parse(time.RFC3339, r.Date); err == nil {
+				dateStr = t.Format("2006-01-02")
+			}
+
+			startStr := r.StartOT
+			if t, err := time.Parse(time.RFC3339, r.StartOT); err == nil {
+				startStr = t.Format("15:04:05")
+			}
+
+			stopStr := r.StopOT
+			if t, err := time.Parse(time.RFC3339, r.StopOT); err == nil {
+				stopStr = t.Format("15:04:05")
+			}
+
+			insertData = append(insertData, model.OTlogs{
+				ID:           r.ID,
+				HRCheck:      r.HRCheck,
+				Sequence:     r.Sequence,
+				Department:   r.Department,
+				Dep:          r.Dep,
+				ShiftOT:      r.ShiftOT,
+				TypeOT:       r.TypeOT,
+				Date:         dateStr,
+				AB:           r.AB,
+				EmployeeCode: r.EmployeeCode,
+				StartOT:      startStr,
+				StopOT:       stopStr,
+				WorkOT:       r.WorkOT,
+				Approve:      r.Approve,
+				RequestAP:    r.RequestAP,
+				RequestTap:   r.RequestTap,
+				ChiefAP:      r.ChiefAP,
+				ChiefTap:     r.ChiefTap,
+				ManagerAP:    r.ManagerAP,
+				ManagerTap:   r.ManagerTap,
+				HRAP:         r.HRAP,
+				HRTap:        r.HRTap,
+				DeleteName:   r.DeleteName,
+				Deletetime:   r.Deletetime,
+				CreateDate:   r.CreateDate,
+			})
+		}
+
+		if err := s.AppRepo.BulkInsert(insertData); err != nil {
+			log.Println("Batch upsert OT error:", err)
+			return
+		}
+
+		lastID = records[len(records)-1].ID
+	}
+}
+
+// ดึงและ sync holidays จาก ECONS -> app DB
+func (s *RequestService) SyncHolidays() error {
+	records, err := s.EconsRepo.GetAllHolidays()
+	if err != nil {
+		return err
+	}
+
+	var insertData []model.Holiday
+	for _, r := range records {
+		insertData = append(insertData, model.Holiday{
+			ID:     r.ID,
+			Date:   r.Date,
+			Remark: r.Remark,
+			Sunday: r.Sunday,
+		})
+	}
+	return s.HolidayRepo.BulkInsertHolidays(insertData)
+}
+
+func (s *RequestService) GenerateAndSaveOT() error {
+	docs, details, err := s.OTLogsProcessing()
+	if err != nil {
+		return err
+	}
+	if len(docs) == 0 || len(details) == 0 {
+		return nil
+	}
+
+	// 1) เซฟหัวเอกสาร
+	if err := s.AppRepo.SaveOTDoc(docs); err != nil {
+		return err
+	}
+
+	// 2) ดึง OTDoc จาก DB อีกรอบ เพื่อให้ได้ id ที่ถูกต้อง ทั้งของ record ใหม่และ record เดิม
+	sequences := make([]int64, 0, len(docs))
+	for _, d := range docs {
+		sequences = append(sequences, d.Sequence)
+	}
+	savedDocs, err := s.AppRepo.GetOTDocsBySequences(sequences)
+	if err != nil {
+		return err
+	}
+
+	// 3) map sequence -> id ที่อยู่ใน DB จริง
+	seqToID := make(map[int64]uint, len(savedDocs))
+	for _, d := range savedDocs {
+		seqToID[d.Sequence] = d.ID
+	}
+
+	// 4) ใส่ OTDocID ให้ detail แต่ละแถว ถ้าไม่มี doc สำหรับ sequence นั้นจะข้ามไป
+	filteredDetails := make([]model.OTDetail, 0, len(details))
+	for i := range details {
+		id, ok := seqToID[details[i].Sequence]
+		if !ok {
+			continue
+		}
+		details[i].OTDocID = id
+		filteredDetails = append(filteredDetails, details[i])
+	}
+	if len(filteredDetails) == 0 {
+		return nil
+	}
+
+	// 5) เซฟรายละเอียด
+	return s.AppRepo.SaveOTDetails(filteredDetails)
+}
+
+func (s *RequestService) OTLogsProcessing() ([]model.OTDoc, []model.OTDetail, error) {
+	otLogs, err := s.AppRepo.GetOTlogs()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// เตรียม map แปลง employee_code -> user_id จาก user-service
+	employeeSet := make(map[string]struct{})
+	for _, ot := range otLogs {
+		if ot.EmployeeCode == "" {
+			continue
+		}
+		employeeSet[ot.EmployeeCode] = struct{}{}
+	}
+
+	employeeCodes := make([]string, 0, len(employeeSet))
+	for code := range employeeSet {
+		employeeCodes = append(employeeCodes, code)
+	}
+
+	userMap, err := s.UserRepo.GetUserIDMapByEmployeeIDs(employeeCodes)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// group by sequence to build OTDoc, then flatten employees into OTDetail
+	docsMap := make(map[int64]*model.OTDoc)
+	details := make([]model.OTDetail, 0, len(otLogs))
+
+	for _, r := range otLogs {
+		// สนใจเฉพาะรายการที่ HR_CHECK = "APPROVE" เท่านั้น
+		if r.HRCheck != "APPROVE" {
+			continue
+		}
+
+		// parse date and times from strings in ot_logs
+		var parsedDate time.Time
+		// รองรับทั้งรูปแบบ "2006-01-02" และ RFC3339 เช่น "2006-01-02T00:00:00Z"
+		parsedDate, err = time.Parse("2006-01-02", r.Date)
+		if err != nil {
+			// ลอง parse แบบ RFC3339 แล้วตัดให้เหลือแค่วันที่
+			if t, err2 := time.Parse(time.RFC3339, r.Date); err2 == nil {
+				parsedDate = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+			} else {
+				return nil, nil, err
+			}
+		}
+		// startTime, err := time.Parse("15:04:05", r.StartOT)
+		// if err != nil {
+		// 	return nil, nil, err
+		// }
+		// stopTime, err := time.Parse("15:04:05", r.StopOT)
+		// if err != nil {
+		// 	return nil, nil, err
+		// }
+
+		var userID int64
+		if id, ok := userMap[r.EmployeeCode]; ok {
+			userID = id
+		}
+
+		doc, ok := docsMap[r.Sequence]
+		if !ok {
+			chiefTap := r.ChiefTap
+			managerTap := r.ManagerTap
+			hrTap := r.HRTap
+
+			doc = &model.OTDoc{
+				Sequence:   r.Sequence,
+				Date:       parsedDate,
+				ShiftOT:    r.ShiftOT,
+				Department: r.Department,
+				Dep:        r.Dep,
+				RequestAP:  r.RequestAP,
+				RequestTap: r.RequestTap,
+				HRCheck:    r.HRCheck,
+				Approve:    r.Approve,
+				ChiefAP:    r.ChiefAP,
+				ChiefTap:   &chiefTap,
+				ManagerAP:  r.ManagerAP,
+				ManagerTap: &managerTap,
+				HRAP:       r.HRAP,
+				HRTap:      &hrTap,
+			}
+			docsMap[r.Sequence] = doc
+		} else {
+			// ensure doc-level date is consistent; if not, keep the first one
+			_ = doc
+		}
+
+		detail := model.OTDetail{
+			OTDocID:      0, // จะถูกเติมภายหลัง หลังจากบันทึก OTDoc แล้ว map จาก Sequence -> ID
+			EmployeeID:   userID,
+			EmployeeCode: r.EmployeeCode,
+			Date:         parsedDate,
+			TypeOT:       r.TypeOT,
+			StartOT:      r.StartOT,
+			StopOT:       r.StopOT,
+			WorkOT:       r.WorkOT,
+			SourceLogID:  r.ID,
+			Sequence:     r.Sequence,
+		}
+		details = append(details, detail)
+	}
+
+	otDocs := make([]model.OTDoc, 0, len(docsMap))
+	for _, d := range docsMap {
+		otDocs = append(otDocs, *d)
+	}
+
+	return otDocs, details, nil
+}
+
+// FIX ยังเหลือการลบการแสกนซ้ำอยู่
+func (s *RequestService) ExportOTLogsByDateRange(startDate, endDate string) ([]dto.OTExport, error) {
+	otLogs, err := s.AppRepo.GetOTlogsByDateRange(startDate, endDate)
+	if err != nil {
+		return nil, err
+	}
+
+	var exports []dto.OTExport
+	for _, log := range otLogs {
+		var TypeOTs string
+
+		switch log.TypeOT {
+		case "010001":
+			TypeOTs = "10008"
+		case "010002":
+			if log.AB == "Before" {
+				TypeOTs = "10001"
+			} else {
+				TypeOTs = "10003"
+			}
+		case "010003":
+			TypeOTs = "10009"
+		case "010004":
+			TypeOTs = "10007"
+		}
+
+		var approved int
+		if log.ChiefAP != "" && log.ManagerAP != "" && log.HRAP != "" {
+			approved = 1
+		} else if log.ChiefAP == "" || log.ManagerAP == "" || log.HRAP == "" {
+			approved = 0
+		}
+
+		var hours float32
+		if log.StartOT != "" && log.StopOT != "" {
+			startTime, err1 := time.Parse("15:04:05", log.StartOT)
+			stopTime, err2 := time.Parse("15:04:05", log.StopOT)
+			if err1 == nil && err2 == nil {
+				duration := stopTime.Sub(startTime)
+				hours = float32(duration.Hours())
+			}
+		}
+
+		formattedDate := ""
+		if len(log.Date) >= 10 {
+			if t, err := time.Parse("2006-01-02", log.Date[:10]); err == nil {
+				formattedDate = t.Format("20060102")
+			}
+		}
+
+		exports = append(exports, dto.OTExport{
+			EmployeeCode: log.EmployeeCode,
+			Date:         formattedDate,
+			ShiftID:      "00",
+			TypeOT:       log.TypeOT,
+			TypeOTs:      TypeOTs,
+			Approve:      approved,
+			Hours:        hours,
+		})
+	}
+
+	return exports, nil
+}
