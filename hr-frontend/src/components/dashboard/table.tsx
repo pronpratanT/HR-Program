@@ -143,7 +143,7 @@ function TableComponent() {
                     </SortableHeader>
                   )}
                 </Table.Column>
-                <Table.Column className="py-3 px-6 text-left text-sm font-medium text-zinc-400">
+                <Table.Column className="py-3 px-6 text-center text-sm font-medium text-zinc-400">
                   รหัสกะ
                 </Table.Column>
                 <Table.Column className="py-3 px-6 text-left text-sm font-medium text-zinc-400">
@@ -171,7 +171,7 @@ function TableComponent() {
                     <Table.Cell className="py-4 px-6 text-sm font-semibold text-white">
                       {data.date}
                     </Table.Cell>
-                    <Table.Cell className="py-4 px-6 text-sm text-zinc-300">
+                    <Table.Cell className="py-4 px-6 text-sm text-zinc-300 text-center">
                       {data.shiftCode}
                     </Table.Cell>
                     <Table.Cell className="py-4 px-6 text-sm text-zinc-300">

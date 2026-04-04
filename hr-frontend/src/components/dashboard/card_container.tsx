@@ -43,7 +43,7 @@ const sampleData = {
   EndDate: "2024-06-12",
   leaveType: "ลาป่วย",
   reason: "ป่วยเป็นไข้หวัดใหญ่",
-  file: "/hr-frontend/public/file/Pronpratan-Information.pdf",
+  file: "/hr-frontend/public/file/Medical_Certificate_TH.pdf",
 };
 
 function CardContainerComponent() {
@@ -200,7 +200,7 @@ function CardContainerComponent() {
                           {getFileName(sampleData.file)}
                         </span>
                         <a
-                          href="/file/resume-pronpratan.pdf"
+                          href="/file/Medical_Certificate_TH.pdf"
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 transition-colors shrink-0"
@@ -213,7 +213,7 @@ function CardContainerComponent() {
                       {/* PDF Preview */}
                       <div className="rounded-lg overflow-hidden border border-zinc-800 bg-zinc-900">
                         <iframe
-                          src="/file/resume-pronpratan.pdf"
+                          src="/file/Medical_Certificate_TH.pdf"
                           className="w-full"
                           style={{ height: "480px" }}
                           title={getFileName(sampleData.file)}
