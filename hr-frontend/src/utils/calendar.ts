@@ -13,7 +13,7 @@ export function pad(n: number): string {
  */
 export function getDaysArray(year: number, month: number) {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const startDay = new Date(year, month, 1).getDay(); // 0=Sun, 1=Mon, ...
+  const startDay = new Date(year, month, 0).getDay(); // 0=Sun, 1=Mon, ...
   const prevMonthDays = new Date(year, month, 0).getDate();
 
   // Days from previous month

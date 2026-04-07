@@ -17,17 +17,47 @@ import { LuListFilter } from "react-icons/lu";
 
 import { Mock } from "node:test";
 
-type CountAttendanceDaily = {
-  date: string;
-  present_today: number;
-  absent_today: number;
+type LeaveHistory = {
+  id: number;
+  start_date: string;
+  end_date: string;
+  leavetype: string;
 };
 
-const mockCountAttendanceDaily: CountAttendanceDaily[] = [
-  { date: "2026-03-05", present_today: 2, absent_today: 2 },
-  { date: "2026-03-06", present_today: 3, absent_today: 1 },
-  { date: "2026-03-07", present_today: 1, absent_today: 3 },
+const mockLeaveHistory: LeaveHistory[] = [
+  {
+    id: 1,
+    start_date: "2026-03-05",
+    end_date: "2026-03-05",
+    leavetype: "ลาป่วย(ใบแพทย์)",
+  },
+  {
+    id: 2,
+    start_date: "2026-03-06",
+    end_date: "2026-03-06",
+    leavetype: "ลากิจ",
+  },
+  {
+    id: 3,
+    start_date: "2026-03-09",
+    end_date: "2026-03-11",
+    leavetype: "ลาพักร้อน",
+  },
+  {
+    id: 4,
+    start_date: "2026-03-13",
+    end_date: "2026-03-13",
+    leavetype: "ลาป่วย(ไม่มีใบแพทย์)",
+  },
 ];
+
+const getEventSegment = (event: LeaveHistory, date: string) => {
+  if (event.start_date === event.end_date) return "single";
+  if (date === event.start_date) return "start";
+  if (date === event.end_date) return "end";
+  if (date > event.start_date && date < event.end_date) return "middle";
+  return null;
+};
 
 function CalendarTableComponent() {
   const today = new Date();
@@ -68,13 +98,13 @@ function CalendarTableComponent() {
           <div className="flex items-center gap-1">
             <button
               onClick={handlerPrevMonth}
-              className="w-8 h-8 flex items-center justify-center rounded-full border border-zinc-200 text-zinc-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors"
+              className="w-8 h-8 flex items-center justify-center rounded-full border border-zinc-200 text-zinc-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors cursor-pointer"
             >
               <MdOutlineKeyboardArrowLeft className="w-5 h-5" />
             </button>
             <button
               onClick={handlerNextMonth}
-              className="w-8 h-8 flex items-center justify-center rounded-full border border-zinc-200 text-zinc-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors"
+              className="w-8 h-8 flex items-center justify-center rounded-full border border-zinc-200 text-zinc-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors cursor-pointer"
             >
               <MdOutlineKeyboardArrowRight className="w-5 h-5" />
             </button>
@@ -84,37 +114,47 @@ function CalendarTableComponent() {
           <div className="min-w-180 overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm xl:min-w-0">
             {/* Calendar header */}
             <div className="grid grid-cols-7 border-b border-zinc-100">
-              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, i) => (
-                <div
-                  key={day}
-                  className={`flex items-center justify-center py-2.5 text-xs font-semibold uppercase tracking-wide
-                    ${i === 0 ? "text-red-400" : i === 6 ? "text-blue-400" : "text-zinc-400"}
+              {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
+                (day, i) => (
+                  <div
+                    key={day}
+                    className={`flex items-center justify-center py-2.5 text-xs font-semibold uppercase tracking-wide
+                    ${i === 6 ? "text-red-400" : "text-zinc-400"}
                     ${i !== 6 ? "border-r border-zinc-100" : ""}`}
-                >
-                  {day}
-                </div>
-              ))}
+                  >
+                    {day}
+                  </div>
+                ),
+              )}
             </div>
             {/* Calendar grid */}
             <div className="grid grid-cols-7">
               {days.map((d, idx) => {
-                const events = mockCountAttendanceDaily.filter(
-                  (event) => event.date === d.date,
-                );
+                const events = mockLeaveHistory
+                  .filter(
+                    (event) =>
+                      event.start_date <= d.date && event.end_date >= d.date,
+                  )
+                  .map((event) => ({
+                    ...event,
+                    segment: getEventSegment(event, d.date),
+                  }));
+
                 const isToday = d.date === todayText;
                 const isCurrent = d.type === "current";
                 const colIdx = idx % 7;
+
                 return (
                   <div
                     key={idx}
                     className={[
-                      "flex min-h-16 flex-col p-2 transition-all duration-150 border-r border-b border-zinc-100",
+                      "flex min-h-16 flex-col p-2 transition-all duration-150 border-r border-b border-zinc-100 overflow-hidden",
                       isCurrent ? "cursor-pointer" : "",
                       isToday
                         ? "bg-blue-50 ring-2 ring-inset ring-blue-400 z-10 relative"
                         : isCurrent
-                        ? "bg-white hover:bg-zinc-50"
-                        : "bg-zinc-50/60",
+                          ? "bg-white hover:bg-zinc-50"
+                          : "bg-zinc-50/60",
                     ].join(" ")}
                   >
                     {/* date */}
@@ -124,30 +164,58 @@ function CalendarTableComponent() {
                         isToday
                           ? "bg-blue-500 text-white"
                           : isCurrent
-                          ? colIdx === 0
-                            ? "text-red-400"
-                            : colIdx === 6
-                            ? "text-blue-400"
-                            : "text-gray-700"
-                          : "text-zinc-300",
+                            ? colIdx === 6
+                              ? "text-red-400"
+                              : "text-gray-700"
+                            : "text-zinc-300",
                       ].join(" ")}
                     >
                       {d.day}
                     </span>
-                    {/* Event Cards */}
+
+                    {/* Event Bars */}
                     <div className="mt-1 space-y-1">
-                      {events.map((event) => (
-                        <div key={event.date}>
-                          <div className="rounded px-1.5 py-0.5 text-[10px] font-medium bg-emerald-50 text-emerald-700 flex items-center justify-between">
-                            <span>Present</span>
-                            <span className="font-semibold">{event.present_today}</span>
+                      {events.map((event) => {
+                        const { segment } = event;
+                        const isStart =
+                          segment === "start" || segment === "single";
+                        const isEnd = segment === "end" || segment === "single";
+
+                        return (
+                          <div
+                            key={event.id}
+                            className={[
+                              "h-[18px] text-[10px] font-medium flex items-center overflow-hidden",
+                              event.leavetype === "ลาป่วย(ใบแพทย์)"
+                                ? "bg-blue-100 text-blue-800"
+                                : event.leavetype === "ลากิจ"
+                                  ? "bg-amber-100 text-amber-800"
+                                  : event.leavetype === "ลาพักร้อน"
+                                    ? "bg-violet-100 text-violet-800"
+                                    : event.leavetype === "ลาป่วย(ไม่มีใบแพทย์)"
+                                      ? "bg-red-100 text-red-800"
+                                      : "",
+                              // single day
+                              isStart && isEnd ? "rounded px-1.5" : "",
+                              // start of multi-day: rounded left, extend right
+                              isStart && !isEnd ? "rounded-l pl-1.5 -mr-3" : "",
+                              // end of multi-day: rounded right, extend left
+                              !isStart && isEnd ? "rounded-r pr-1.5 -ml-3" : "",
+                              // middle: extend both sides, no rounding
+                              !isStart && !isEnd ? "-mx-3" : "",
+                            ]
+                              .filter(Boolean)
+                              .join(" ")}
+                          >
+                            {/* Show label only at the start */}
+                            {isStart && (
+                              <span className="font-semibold truncate">
+                                {event.leavetype}
+                              </span>
+                            )}
                           </div>
-                          <div className="mt-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium bg-red-50 text-red-500 flex items-center justify-between">
-                            <span>Absent</span>
-                            <span className="font-semibold">{event.absent_today}</span>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 );

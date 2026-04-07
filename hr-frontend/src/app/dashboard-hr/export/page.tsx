@@ -65,25 +65,25 @@ function ExportDataPage() {
   const [size, setSize] = useState<SizeType>("large");
 
   // Check authentication and department on page load
-  useEffect(() => {
-    const match = document.cookie.match(new RegExp("(^| )authToken=([^;]+)"));
-    const token = match ? match[2] : null;
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-    // ตรวจสอบ department_id
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      try {
-        const user = JSON.parse(userData);
-        if (user.department_id !== 10109) {
-          alert("คุณไม่มีสิทธิ์เข้าถึงหน้านี้");
-          router.push("/");
-        }
-      } catch {}
-    }
-  }, [router]);
+  // useEffect(() => {
+  //   const match = document.cookie.match(new RegExp("(^| )authToken=([^;]+)"));
+  //   const token = match ? match[2] : null;
+  //   if (!token) {
+  //     router.push("/login");
+  //     return;
+  //   }
+  //   // ตรวจสอบ department_id
+  //   const userData = localStorage.getItem("user");
+  //   if (userData) {
+  //     try {
+  //       const user = JSON.parse(userData);
+  //       if (user.department_id !== 10109) {
+  //         alert("คุณไม่มีสิทธิ์เข้าถึงหน้านี้");
+  //         router.push("/");
+  //       }
+  //     } catch {}
+  //   }
+  // }, [router]);
 
   const handleExport = () => {
     // console.log("Exporting data from", startDate, "to", endDate);

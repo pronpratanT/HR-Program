@@ -65,18 +65,18 @@ const leaveTypes = [
     title: "ลาป่วย (ไม่มีใบรับรองแพทย์)",
     total: 7,
     used: 2,
-    iconBg: "bg-green-50",
-    barColor: "bg-green-500",
+    iconBg: "bg-red-50",
+    barColor: "bg-red-500",
     icon: (
       <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
         <path
           d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"
-          stroke="#3B6D11"
+          stroke="#B91C1C"
           strokeWidth="1.5"
         />
         <path
           d="M12 7v5l3 3"
-          stroke="#3B6D11"
+          stroke="#B91C1C"
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -139,8 +139,13 @@ function CardDetailComponent() {
   return (
     <>
       <div className="flex flex-col md:flex-row gap-6 mb-6">
-        <div className="w-full md:w-1/2">
-          <div className="grid grid-cols-2 gap-4 py-3">
+        <div className="w-full md:w-1/2 py-3">
+          <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <h5 className="text-gray-800 text-xl font-medium tracking-tight">
+              สิทธิ์การลา
+            </h5>
+          </div>
+          <div className="grid grid-cols-2 gap-4 py-1">
             {leaveTypes.map((leave) => {
               const remaining = leave.total - leave.used;
               const percent = Math.round((leave.used / leave.total) * 100);
