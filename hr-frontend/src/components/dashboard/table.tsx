@@ -148,8 +148,8 @@ function TableComponent() {
       {/* Card Container with Tabs */}
       <CardComponent />
       {/* Table Container Responsive */}
-      <div className="w-full overflow-x-auto">
-        <div className="min-w-[700px] bg-[#1c1c1e] rounded-2xl overflow-hidden border border-zinc-700/50 w-full">
+      <div className="w-full overflow-x-auto shadow-gray-300 shadow-lg rounded-2xl">
+        <div className="min-w-[700px] bg-[#1c1c1e] rounded-2xl overflow-hidden w-full">
           <Table>
             <Table.ScrollContainer>
               <Table.Content
@@ -158,12 +158,12 @@ function TableComponent() {
                 sortDescriptor={sortDescriptor}
                 onSortChange={setSortDescriptor}
               >
-                <Table.Header className="bg-[#2c2c2e]">
+                <Table.Header className="bg-[#051f20]">
                   <Table.Column
                     isRowHeader
                     id="date"
                     allowsSorting
-                    className="py-2 px-2 sm:py-3 sm:px-6 text-left text-xs sm:text-sm font-medium text-zinc-400"
+                    className="py-2 px-2 sm:py-3 sm:px-6 text-left text-xs sm:text-sm font-medium text-stone-100"
                   >
                     {({ sortDirection }) => (
                       <SortableHeader sortDirection={sortDirection}>
@@ -171,50 +171,50 @@ function TableComponent() {
                       </SortableHeader>
                     )}
                   </Table.Column>
-                  <Table.Column className="py-2 px-2 sm:py-3 sm:px-6 text-center text-xs sm:text-sm font-medium text-zinc-400">
+                  <Table.Column className="py-2 px-2 sm:py-3 sm:px-6 text-center text-xs sm:text-sm font-medium text-stone-100">
                     รหัสกะ
                   </Table.Column>
-                  <Table.Column className="py-2 px-2 sm:py-3 sm:px-6 text-left text-xs sm:text-sm font-medium text-zinc-400 hidden md:table-cell">
+                  <Table.Column className="py-2 px-2 sm:py-3 sm:px-6 text-left text-xs sm:text-sm font-medium text-stone-100 hidden md:table-cell">
                     ชื่อกะ
                   </Table.Column>
-                  <Table.Column className="py-2 px-2 sm:py-3 sm:px-6 text-left text-xs sm:text-sm font-medium text-zinc-400">
+                  <Table.Column className="py-2 px-2 sm:py-3 sm:px-6 text-left text-xs sm:text-sm font-medium text-stone-100">
                     ผลจากข้อตกลง
                   </Table.Column>
-                  <Table.Column className="py-2 px-2 sm:py-3 sm:px-6 text-left text-xs sm:text-sm font-medium text-zinc-400 max-w-[120px] md:max-w-xs truncate">
+                  <Table.Column className="py-2 px-2 sm:py-3 sm:px-6 text-left text-xs sm:text-sm font-medium text-stone-100 max-w-[120px] md:max-w-xs truncate">
                     ลักษณะการรูดบัตร
                   </Table.Column>
-                  <Table.Column className="py-2 px-2 sm:py-3 sm:px-6 text-left text-xs sm:text-sm font-medium text-zinc-400 hidden md:table-cell">
+                  <Table.Column className="py-2 px-2 sm:py-3 sm:px-6 text-left text-xs sm:text-sm font-medium text-stone-100 hidden md:table-cell">
                     วิธีหัก
                   </Table.Column>
-                  <Table.Column className="py-2 px-2 sm:py-3 sm:px-6 text-left text-xs sm:text-sm font-medium text-zinc-400">
+                  <Table.Column className="py-2 px-2 sm:py-3 sm:px-6 text-left text-xs sm:text-sm font-medium text-stone-100">
                     จำนวน
                   </Table.Column>
                 </Table.Header>
-                <Table.Body className="divide-y divide-zinc-800">
+                <Table.Body className="divide-y divide-stone-300">
                   {paginatedData.map((data, index) => (
                     <Table.Row
                       key={index}
-                      className="bg-[#1c1c1e] hover:bg-zinc-800/60 transition-colors duration-150 cursor-pointer"
+                      className="bg-stone-100 hover:bg-stone-200 transition-colors duration-150 cursor-pointer"
                     >
-                      <Table.Cell className="py-2 px-2 sm:py-4 sm:px-6 text-xs sm:text-sm font-semibold text-white">
+                      <Table.Cell className="py-2 px-2 sm:py-4 sm:px-6 text-xs sm:text-sm font-semibold text-gray-600">
                         {data.date}
                       </Table.Cell>
-                      <Table.Cell className="py-2 px-2 sm:py-4 sm:px-6 text-xs sm:text-sm text-zinc-300 text-center">
+                      <Table.Cell className="py-2 px-2 sm:py-4 sm:px-6 text-xs sm:text-sm text-gray-600 text-center">
                         {data.shiftCode}
                       </Table.Cell>
-                      <Table.Cell className="py-2 px-2 sm:py-4 sm:px-6 text-xs sm:text-sm text-zinc-300 hidden md:table-cell">
+                      <Table.Cell className="py-2 px-2 sm:py-4 sm:px-6 text-xs sm:text-sm text-gray-600 hidden md:table-cell">
                         {data.shiftName}
                       </Table.Cell>
-                      <Table.Cell className="py-2 px-2 sm:py-4 sm:px-6 text-xs sm:text-sm text-zinc-300">
+                      <Table.Cell className="py-2 px-2 sm:py-4 sm:px-6 text-xs sm:text-sm text-gray-600">
                         {data.agreementResult}
                       </Table.Cell>
-                      <Table.Cell className="py-2 px-2 sm:py-4 sm:px-6 text-xs sm:text-sm text-zinc-300 max-w-[120px] md:max-w-xs truncate">
+                      <Table.Cell className="py-2 px-2 sm:py-4 sm:px-6 text-xs sm:text-sm text-gray-600 max-w-[120px] md:max-w-xs truncate">
                         {data.cardSwipeType}
                       </Table.Cell>
-                      <Table.Cell className="py-2 px-2 sm:py-4 sm:px-6 text-xs sm:text-sm text-zinc-300 hidden md:table-cell">
+                      <Table.Cell className="py-2 px-2 sm:py-4 sm:px-6 text-xs sm:text-sm text-gray-600 hidden md:table-cell">
                         {data.deductionMethod}
                       </Table.Cell>
-                      <Table.Cell className="py-2 px-2 sm:py-4 sm:px-6 text-xs sm:text-sm text-zinc-300">
+                      <Table.Cell className="py-2 px-2 sm:py-4 sm:px-6 text-xs sm:text-sm text-gray-600">
                         {data.amount}
                       </Table.Cell>
                     </Table.Row>
@@ -225,8 +225,8 @@ function TableComponent() {
 
             {/* Footer Pagination */}
             <Table.Footer>
-              <div className="px-2 sm:px-6 py-2 sm:py-3 bg-[#2c2c2e] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
-                <span className="text-xs text-zinc-500">
+              <div className="px-2 sm:px-6 py-2 sm:py-3 bg-[#051f20] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+                <span className="text-xs text-stone-100">
                   {rangeStart} to {rangeEnd} of {mockData.length} results
                 </span>
                 <Pagination size="sm">
@@ -235,7 +235,7 @@ function TableComponent() {
                       <Pagination.Previous
                         isDisabled={page === 1}
                         onPress={() => setPage((p) => Math.max(1, p - 1))}
-                        className="text-xs px-2.5 py-1 rounded-md text-zinc-300 hover:text-white hover:bg-zinc-700 disabled:opacity-30 flex items-center gap-1 transition-colors cursor-pointer"
+                        className="text-xs px-2.5 py-1 rounded-md text-stone-100 hover:text-white hover:bg-[#235347] flex items-center gap-1 transition-colors cursor-pointer"
                       >
                         <Pagination.PreviousIcon />
                         Prev
@@ -249,7 +249,7 @@ function TableComponent() {
                           className={cn(
                             "text-xs w-7 h-7 rounded-md flex items-center justify-center transition-colors",
                             p === page
-                              ? "bg-zinc-600 text-white font-semibold"
+                              ? "bg-[#235347] text-white font-semibold"
                               : "text-zinc-400 hover:text-white hover:bg-zinc-700",
                           )}
                         >
@@ -263,7 +263,7 @@ function TableComponent() {
                         onPress={() =>
                           setPage((p) => Math.min(totalPages, p + 1))
                         }
-                        className="text-xs px-2.5 py-1 rounded-md text-zinc-300 hover:text-white hover:bg-zinc-700 disabled:opacity-30 flex items-center gap-1 transition-colors cursor-pointer"
+                        className="text-xs px-2.5 py-1 rounded-md text-stone-100 hover:text-white hover:bg-[#235347] flex items-center gap-1 transition-colors cursor-pointer"
                       >
                         Next
                         <Pagination.NextIcon />

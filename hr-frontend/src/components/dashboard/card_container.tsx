@@ -90,7 +90,7 @@ function CardContainerComponent() {
             className={cn(
               "flex items-center gap-1.5 px-3 py-1.5 rounded-tl-xl text-sm font-semibold transition-colors cursor-pointer",
               activeTab === "summary"
-                ? "bg-[#235347] text-zinc-200 hover:text-white hover:bg-[#163832]"
+                ? "bg-[#051f20] text-zinc-200 hover:text-white hover:bg-[#235347]"
                 : "bg-zinc-100 text-zinc-900 shadow hover:bg-zinc-600 hover:text-white",
             )}
           >
@@ -102,7 +102,7 @@ function CardContainerComponent() {
             className={cn(
               "flex items-center gap-1.5 px-3 py-1.5 rounded-tr-xl text-sm font-semibold transition-colors cursor-pointer",
               activeTab === "leaveform"
-                ? "bg-[#235347] text-zinc-200 hover:text-white hover:bg-[#163832]"
+                ? "bg-[#051f20] text-zinc-200 hover:text-white hover:bg-[#235347]"
                 : "bg-zinc-100 text-zinc-900 shadow hover:bg-zinc-600 hover:text-white",
             )}
           >
@@ -249,11 +249,11 @@ function CardContainerComponent() {
               <form className="space-y-5">
                 {/* วันที่ลา */}
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-xs font-semibold text-zinc-400 uppercase tracking-widest">
+                  <label className="flex items-center gap-2 text-xs font-semibold text-zinc-500 uppercase tracking-widest">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
                     วันที่ลา
                   </label>
-                  <div className="rounded-xl border border-zinc-700/80 bg-zinc-100/60 overflow-hidden">
+                  <div className="rounded-xl border border-zinc-700/80 bg-stone-50/60 overflow-hidden">
                     <RangeCalendar
                       aria-label="วันที่ลา"
                       firstDayOfWeek="mon"
@@ -310,9 +310,9 @@ function CardContainerComponent() {
                                   // "flex justify-center items-center px-3 py-1.5 rounded-lg text-sm transition-colors cursor-pointer hover:bg-blue-500/20"
                                   //"relative flex justify-center items-center w-9 h-9 text-sm transition-colors cursor-pointer select-none outline-none"
                                   // สีข้อความ
-                                  isOutside ? "text-zinc-600" : "text-zinc-300",
+                                  isOutside ? "text-zinc-300" : "text-zinc-600",
                                   // แถบ in-range
-                                  isInRange && "text-white bg-blue-500/20",
+                                  isInRange && "text-gray-600 bg-blue-500/20",
                                   // แถบครึ่งขวาที่ start
                                   isStart &&
                                     !isSingleDay &&
@@ -333,7 +333,7 @@ function CardContainerComponent() {
                                   !isStart &&
                                     !isEnd &&
                                     !isInRange &&
-                                    "rounded-full hover:bg-zinc-700 hover:text-white",
+                                    "rounded-full hover:bg-sky-600 hover:text-white",
                                   // วันปัจจุบัน
                                   date.compare(today(getLocalTimeZone())) ===
                                     0 && "text-sky-500",
@@ -349,7 +349,7 @@ function CardContainerComponent() {
 
                 {/* ประเภทการลา */}
                 <div className="space-y-2 relative">
-                  <label className="flex items-center gap-2 text-xs font-semibold text-zinc-400 uppercase tracking-widest">
+                  <label className="flex items-center gap-2 text-xs font-semibold text-zinc-500 uppercase tracking-widest">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
                     ประเภทการลา
                   </label>
@@ -368,12 +368,12 @@ function CardContainerComponent() {
                     }}
                   >
                     <Label className="sr-only">ประเภทการลา</Label>
-                    <Select.Trigger className="w-full flex items-center justify-between rounded-xl bg-zinc-800/60 border border-zinc-700/80 px-4 h-11 text-white text-sm cursor-pointer hover:border-zinc-500 transition-colors">
+                    <Select.Trigger className="w-full flex items-center justify-between rounded-xl bg-stone-50 border border-zinc-700/80 px-4 h-11 text-zinc-700 text-sm cursor-pointer hover:border-zinc-500 transition-colors">
                       <Select.Value className="text-zinc-300 truncate">
                         {(item) => {
                           if (!item || item.isPlaceholder) {
                             return (
-                              <span className="text-zinc-500">
+                              <span className="text-zinc-600">
                                 เลือกประเภทการลา
                               </span>
                             );
@@ -381,11 +381,11 @@ function CardContainerComponent() {
                           return <span>{item.selectedText}</span>;
                         }}
                       </Select.Value>
-                      <Select.Indicator className="text-zinc-400 flex-shrink-0 ml-2" />
+                      <Select.Indicator className="text-zinc-600 flex-shrink-0 ml-2" />
                     </Select.Trigger>
                     <Select.Popover
                       style={{ width: "var(--trigger-width)" }}
-                      className="bg-zinc-800 border border-zinc-700 rounded-xl shadow-xl overflow-hidden z-50"
+                      className="bg-stone-50 border border-zinc-700 rounded-xl shadow-xl overflow-hidden z-50"
                     >
                       <ListBox className="py-1">
                         {LeaveOptions.map((option) => (
@@ -393,7 +393,7 @@ function CardContainerComponent() {
                             key={option.id}
                             id={option.value}
                             textValue={option.label}
-                            className="flex items-center justify-between px-4 py-2.5 text-sm text-zinc-200 hover:bg-zinc-700 cursor-pointer transition-colors"
+                            className="flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 hover:bg-stone-200 cursor-pointer transition-colors"
                           >
                             <span>{option.label}</span>
                             {selectedLeaveType?.value === option.value && (
@@ -410,12 +410,12 @@ function CardContainerComponent() {
 
                 {/* เหตุผล */}
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-xs font-semibold text-zinc-400 uppercase tracking-widest">
+                  <label className="flex items-center gap-2 text-xs font-semibold text-zinc-500 uppercase tracking-widest">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
                     เหตุผล
                   </label>
                   <textarea
-                    className="w-full rounded-xl bg-zinc-800/60 border border-zinc-700/80 px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all resize-none"
+                    className="w-full rounded-xl bg-stone-50 border border-zinc-700/80 px-4 py-3 text-zinc-700 text-sm placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all resize-none"
                     rows={3}
                     placeholder="โปรดระบุเหตุผลการลา..."
                   />
@@ -427,7 +427,7 @@ function CardContainerComponent() {
                 {/* Submit */}
                 <button
                   type="submit"
-                  className="w-full py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-500 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-900/30"
+                  className="w-full py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-500 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-900/30 cursor-pointer"
                 >
                   <VscRequestChanges className="size-4" />
                   ส่งใบลา
